@@ -41,6 +41,8 @@ jobs:
 
       - run: npm ci
       - run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://rack:test-pass@localhost:5432/rack_manager
       - run: npm test
         env:
           DATABASE_URL: postgresql://rack:test-pass@localhost:5432/rack_manager
