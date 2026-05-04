@@ -1,0 +1,192 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  username  String     @unique
+  password  String
+  realName  String?
+  role      String     @default("VIEWER")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  logs      AuditLog[]
+}
+
+model Datacenter {
+  id        Int        @id @default(autoincrement())
+  name      String
+  location  String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  rows      Row[]
+}
+
+model Row {
+  id           Int        @id @default(autoincrement())
+  name         String
+  datacenterId Int
+  datacenter   Datacenter @relation(fields: [datacenterId], references: [id])
+  racks        Rack[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Rack {
+  id        Int      @id @default(autoincrement())
+  name      String
+  rowId     Int
+  row       Row      @relation(fields: [rowId], references: [id])
+  totalU    Int      @default(42)
+  width     Int      @default(19)
+  purpose   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  devices   Device[]
+}
+
+model DeviceType {
+  id      Int            @id @default(autoincrement())
+  name    String         @unique
+  color   String         @default("#4A90D9")
+  devices Device[]
+  templates DeviceTemplate[]
+}
+
+model Device {
+  id             Int              @id @default(autoincrement())
+  name           String
+  brand          String?
+  model          String?
+  serialNumber   String?
+  ipAddress      String?
+  subnet         String?
+  vlan           Int?
+  status         String           @default("active")
+  startU         Int
+  heightU        Int              @default(1)
+  cpuModelId     Int?
+  cpuModel       CpuModel?        @relation(fields: [cpuModelId], references: [id])
+  cpuCount       Int?
+  memModelId     Int?
+  memModel       MemoryModel?     @relation(fields: [memModelId], references: [id])
+  memSize        Int?
+  storage        String?
+  nic            String?
+  description    String?
+  tags           String?
+  assetTag       String?
+  supplier       String?
+  purchaseDate   String?
+  warrantyExpiry String?
+  rackId         Int
+  rack           Rack             @relation(fields: [rackId], references: [id])
+  deviceTypeId   Int
+  deviceType     DeviceType       @relation(fields: [deviceTypeId], references: [id])
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  maintenanceLogs MaintenanceLog[]
+}
+
+model DeviceTemplate {
+  id           Int        @id @default(autoincrement())
+  name         String
+  brand        String?
+  model        String?
+  heightU      Int        @default(1)
+  deviceTypeId Int
+  deviceType   DeviceType @relation(fields: [deviceTypeId], references: [id])
+  cpuModelId   Int?
+  cpuModel     CpuModel?  @relation(fields: [cpuModelId], references: [id])
+  cpuCount     Int?
+  memModelId   Int?
+  memModel     MemoryModel? @relation(fields: [memModelId], references: [id])
+  memSize      Int?
+  storage      String?
+  nic          String?
+  description  String?
+  tags         String?
+  createdAt    DateTime   @default(now())
+}
+
+model MaintenanceLog {
+  id          Int      @id @default(autoincrement())
+  deviceId    Int
+  device      Device   @relation(fields: [deviceId], references: [id])
+  type        String
+  summary     String
+  detail      String?
+  operator    String?
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  Int?
+  detail    String?
+  createdAt DateTime @default(now())
+}
+
+model CpuModel {
+  id           Int              @id @default(autoincrement())
+  brand        String
+  model        String
+  cores        Int?
+  threads      Int?
+  architecture String?
+  createdAt    DateTime         @default(now())
+  templates    DeviceTemplate[]
+  devices      Device[]
+
+  @@unique([brand, model])
+}
+
+model MemoryModel {
+  id        Int              @id @default(autoincrement())
+  brand     String
+  model     String
+  capacity  Int?
+  type      String?
+  speed     Int?
+  ecc       Boolean?
+  createdAt DateTime         @default(now())
+  templates DeviceTemplate[]
+  devices   Device[]
+
+  @@unique([brand, model])
+}
+
+model NicModel {
+  id        Int      @id @default(autoincrement())
+  brand     String
+  model     String
+  speed     String?
+  portType  String?
+  ports     Int?
+  createdAt DateTime @default(now())
+
+  @@unique([brand, model])
+}
+
+model StorageModel {
+  id         Int      @id @default(autoincrement())
+  brand      String
+  model      String
+  capacity   Int?
+  capUnit    String?
+  interface  String?
+  formFactor String?
+  createdAt  DateTime @default(now())
+
+  @@unique([brand, model])
+}
