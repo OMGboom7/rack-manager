@@ -372,7 +372,10 @@ const RackDetail: React.FC = () => {
 
       <Row gutter={16}>
         <Col flex="320px">
-          <Card title="机柜视图" styles={{ body: { padding: 8, overflow: 'auto' } }}>
+          <Card
+            title="机柜视图"
+            styles={{ body: { padding: 8, overflow: 'auto' } }}
+          >
             {rack.devices?.length ? (
               <RackView rack={rack} selectedDeviceId={selectedDevice?.id} onDeviceClick={openEditForm} onDeviceMove={handleDeviceMove} />
             ) : (

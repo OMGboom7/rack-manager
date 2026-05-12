@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Card, Button, Space, Modal, Form, Input, InputNumber, Popconfirm, message, Select, Collapse } from 'antd';
+import { Card, Button, Space, Modal, Form, Input, InputNumber, Popconfirm, message, Select, Collapse, Segmented, Empty } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined, CheckOutlined, RightOutlined, DownOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import api from '@/api/client';
 import type { Datacenter, Row, Rack } from '@/types';
+import Datacenter3DView from '@/components/Rack3DView/Datacenter3DView';
 
 const InlineEdit: React.FC<{
   value: string; onSave: (val: string) => Promise<void>;
@@ -18,26 +19,33 @@ const InlineEdit: React.FC<{
     if (!t || t === value) { setText(value); setEdit(false); return; }
     try { await onSave(t); setEdit(false); } catch { message.error('保存失败'); }
   };
-  if (edit) return (<Space><Input ref={ref} value={text} onChange={e => setText(e.target.value)} onPressEnter={save} onBlur={save} size="small" style={style} /><Button type="text" size="small" icon={<CheckOutlined />} onMouseDown={e => { e.preventDefault(); save(); }} /></Space>);
-  return (<span onClick={() => { setEdit(true); setTimeout(() => ref.current?.focus(), 0); }} style={{ cursor:'pointer', ...style }}>{value || <span style={{ color:'#ccc' }}>{placeholder||'点击设置'}</span>}<EditOutlined style={{ fontSize:11, color:'#999', marginLeft:4 }} /></span>);
+  return edit ? (
+    <Space><Input ref={ref} value={text} onChange={e => setText(e.target.value)} onPressEnter={save} onBlur={save} size="small" style={style} placeholder={placeholder} /><Button type="text" size="small" icon={<CheckOutlined />} onMouseDown={e => { e.preventDefault(); save(); }} /></Space>
+  ) : (
+    <span onClick={() => { setEdit(true); setTimeout(() => ref.current?.focus(), 0); }} style={{ cursor: 'pointer', ...style }}>
+      {value || <span style={{ color: '#ccc' }}>{placeholder || '点击设置'}</span>}<EditOutlined style={{ fontSize: 11, color: '#999', marginLeft: 4 }} />
+    </span>
+  );
 };
 
 const DatacenterList: React.FC = () => {
   const [datacenters, setDatacenters] = useState<Datacenter[]>([]);
   const [loading, setLoading] = useState(true);
+  const [view3D, setView3D] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [modal, setModal] = useState<{ open: boolean; type: 'dc' | 'row' | 'rack'; parentId?: number }>({ open: false, type: 'dc' });
   const [form] = Form.useForm();
-  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const navigate = useNavigate();
 
   const load = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/datacenters');
-      const list = (data.data || data) as Datacenter[];
-      setDatacenters(list);
-      setExpandedRows(new Set(list.flatMap(d => d.rows?.map(r => r.id) || [])));
-    } catch {}
+      const res = await api.get('/datacenters');
+      const list = res.data?.data || res.data;
+      setDatacenters(Array.isArray(list) ? list : []);
+    } catch {
+      setDatacenters([]);
+    }
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -59,62 +67,71 @@ const DatacenterList: React.FC = () => {
   const toggleRow = (id: number) => { setExpandedRows(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; }); };
 
   return (
-    <Card title="机房管理" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setModal({ open: true, type: 'dc' }); form.resetFields(); }}>新建机房</Button>}>
-      <Collapse defaultActiveKey={datacenters.map(d => d.id)} bordered={false} expandIconPosition="start"
-        style={{ background: 'transparent' }}
-      >
-        {datacenters.map((dc) => (
-          <Collapse.Panel
-            key={dc.id}
-            header={
-              <span onClick={e => e.stopPropagation()}>
-                <InlineEdit value={dc.name} onSave={updateDcName(dc)} />
-              </span>
-            }
-            extra={
-              <Space onClick={e => e.stopPropagation()}>
-                <InlineEdit value={dc.location || ''} onSave={updateDcLocation(dc)} placeholder="设置位置" />
-                <Button size="small" onClick={e => { e.stopPropagation(); setModal({ open: true, type: 'row', parentId: dc.id }); form.resetFields(); }}>添加排</Button>
-                <Popconfirm title="确认删除?" onConfirm={async () => { await api.delete(`/datacenters/${dc.id}`); load(); }}>
-                  <Button size="small" danger icon={<DeleteOutlined />} onClick={e => e.stopPropagation()} />
-                </Popconfirm>
-              </Space>
-            }
-          >
-            {dc.rows?.map((row) => (
-              <div key={row.id} style={{ marginBottom: 8 }}>
-                <div style={{ fontWeight: 500, padding: '6px 8px', marginBottom: 4, borderRadius: 4, background: '#f5f5f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => toggleRow(row.id)}>
-                  <Space>
-                    {expandedRows.has(row.id) ? <DownOutlined style={{ fontSize: 10, color: '#999' }} /> : <RightOutlined style={{ fontSize: 10, color: '#999' }} />}
-                    <span>{row.name}</span>
-                    <span style={{ fontSize: 11, color: '#999' }}>({(row.racks || []).length} 机柜)</span>
-                  </Space>
-                  <Space onClick={e => e.stopPropagation()}>
-                    <Button size="small" onClick={() => { setModal({ open: true, type: 'rack', parentId: row.id }); form.resetFields(); }}>添加机柜</Button>
-                    <Popconfirm title="确认删除?" onConfirm={async () => { await api.delete(`/racks/rows/${row.id}`); load(); }}><Button size="small" danger icon={<DeleteOutlined />} /></Popconfirm>
-                  </Space>
+    <Card title="机房管理" extra={
+      <Space>
+        <Segmented size="small" value={view3D ? '3d' : '2d'} onChange={v => setView3D(v === '3d')}
+          options={[{ label: '表格', value: '2d' }, { label: '3D 视图', value: '3d' }]} />
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setModal({ open: true, type: 'dc' }); form.resetFields(); }}>新建机房</Button>
+      </Space>
+    }>
+      {view3D ? (
+        datacenters.length ? <Datacenter3DView datacenter={datacenters[0]} /> : <Empty description="暂无机房" />
+      ) : (
+        <Collapse defaultActiveKey={datacenters.map(d => d.id)} bordered={false} expandIconPosition="start" style={{ background: 'transparent' }}>
+          {datacenters.map((dc) => (
+            <Collapse.Panel key={dc.id}
+              header={<span onClick={e => e.stopPropagation()}><InlineEdit value={dc.name} onSave={updateDcName(dc)} /></span>}
+              extra={
+                <Space onClick={e => e.stopPropagation()}>
+                  <InlineEdit value={dc.location || ''} onSave={updateDcLocation(dc)} placeholder="设置位置" />
+                  <Button size="small" onClick={e => { e.stopPropagation(); setModal({ open: true, type: 'row', parentId: dc.id }); form.resetFields(); }}>添加排</Button>
+                  <Popconfirm title="确认删除?" onConfirm={async () => { await api.delete(`/datacenters/${dc.id}`); load(); }}>
+                    <Button size="small" danger icon={<DeleteOutlined />} onClick={e => e.stopPropagation()} />
+                  </Popconfirm>
+                </Space>
+              }
+            >
+              {dc.rows?.map((row) => (
+                <div key={row.id} style={{ marginBottom: 8 }}>
+                  <div style={{ fontWeight: 500, padding: '6px 8px', marginBottom: 4, borderRadius: 4, background: '#f5f5f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => toggleRow(row.id)}>
+                    <Space>
+                      {expandedRows.has(row.id) ? <DownOutlined style={{ fontSize: 10, color: '#999' }} /> : <RightOutlined style={{ fontSize: 10, color: '#999' }} />}
+                      <span>{row.name}</span>
+                      <span style={{ fontSize: 11, color: '#999' }}>({(row.racks || []).length} 机柜)</span>
+                    </Space>
+                    <Space onClick={e => e.stopPropagation()}>
+                      <Button size="small" onClick={() => { setModal({ open: true, type: 'rack', parentId: row.id }); form.resetFields(); }}>添加机柜</Button>
+                      <Popconfirm title="确认删除?" onConfirm={async () => { await api.delete(`/racks/rows/${row.id}`); load(); }}><Button size="small" danger icon={<DeleteOutlined />} /></Popconfirm>
+                    </Space>
                 </div>
-                <div style={{ maxHeight: expandedRows.has(row.id) ? '2000px' : '0px', overflow: expandedRows.has(row.id) ? 'visible' : 'hidden', transition: 'max-height 0.3s ease', paddingBottom: 4 }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                    {row.racks?.map((rack) => (
-                      <Card key={rack.id} size="small" hoverable style={{ width: 200 }} onClick={() => navigate(`/racks/${rack.id}`)}>
-                        <div style={{ fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                          <span onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#1677ff', flexShrink: 0 }} />
-                            <InlineEdit value={rack.name} onSave={updateRackName(rack)} style={{ fontWeight: 600 }} />
-                          </span>
-                        </div>
-                        {rack.purpose && <div style={{ fontSize: 11, color: '#1677ff', marginBottom: 2 }}>{rack.purpose}</div>}
-                        <div style={{ fontSize: 12, color: '#999' }}>{rack.totalU}U · {rack.devices?.length || 0} 设备</div>
-                      </Card>
-                    ))}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateRows: expandedRows.has(row.id) ? '1fr' : '0fr',
+                  transition: 'grid-template-rows 0.3s ease',
+                }}>
+                  <div style={{ overflow: 'hidden', minHeight: 0 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8, marginBottom: 4 }}>
+                      {row.racks?.map((rack) => (
+                        <Card key={rack.id} size="small" hoverable style={{ width: 200 }} onClick={() => navigate(`/racks/${rack.id}`)}>
+                          <div style={{ fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                            <span onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#1677ff', flexShrink: 0 }} />
+                              <InlineEdit value={rack.name} onSave={updateRackName(rack)} style={{ fontWeight: 600 }} />
+                            </span>
+                          </div>
+                          {rack.purpose && <div style={{ fontSize: 11, color: '#1677ff', marginBottom: 2 }}>{rack.purpose}</div>}
+                          <div style={{ fontSize: 12, color: '#999' }}>{rack.totalU}U · {rack.devices?.length || 0} 设备</div>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </Collapse.Panel>
-        ))}
-      </Collapse>
+              ))}
+            </Collapse.Panel>
+          ))}
+        </Collapse>
+      )}
 
       <Modal title={modal.type === 'dc' ? '新建机房' : modal.type === 'row' ? '新建排/列' : '新建机柜'} open={modal.open} onOk={handleOk} onCancel={() => setModal({ open: false, type: 'dc' })}>
         <Form form={form} layout="vertical">
