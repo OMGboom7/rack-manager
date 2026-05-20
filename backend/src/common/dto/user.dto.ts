@@ -7,14 +7,14 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(32)
-  username: string;
+  username!: string;
 
   @ApiProperty({ description: '密码' })
   @IsString()
   @IsNotEmpty()
   @MinLength(4)
   @MaxLength(64)
-  password: string;
+  password!: string;
 
   @ApiPropertyOptional({ description: '真实姓名' })
   @IsOptional()

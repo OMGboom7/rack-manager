@@ -6,7 +6,7 @@ export class CreateDatacenterDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(64)
-  name: string;
+  name!: string;
 
   @ApiPropertyOptional({ description: '位置' })
   @IsOptional()

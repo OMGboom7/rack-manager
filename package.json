@@ -2,6 +2,21 @@
   "name": "rack-manager",
   "version": "1.0.0",
   "private": true,
+  "description": "数据中心机柜管理系统",
+  "license": "MIT",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OMGboom7/rack-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/OMGboom7/rack-manager/issues"
+  },
+  "homepage": "https://github.com/OMGboom7/rack-manager#readme",
+  "keywords": ["datacenter", "rack", "management", "dcim"],
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
@@ -11,6 +26,6 @@
     "db:seed": "cd backend && npx prisma db seed"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^9.2.1"
   }
 }

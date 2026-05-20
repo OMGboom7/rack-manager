@@ -14,7 +14,7 @@ export class StorageEntryDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  model: string;
+  model!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -33,7 +33,7 @@ export class NicEntryDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  model: string;
+  model!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -48,7 +48,7 @@ export class CreateDeviceDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(128)
-  name: string;
+  name!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -79,7 +79,7 @@ export class CreateDeviceDto {
   @IsInt()
   @Min(1)
   @Max(60)
-  startU: number;
+  startU!: number;
 
   @ApiPropertyOptional({ description: '占用U位高度', default: 1 })
   @IsOptional()
@@ -92,12 +92,12 @@ export class CreateDeviceDto {
   @ApiProperty({ description: '机柜ID' })
   @Type(() => Number)
   @IsInt()
-  rackId: number;
+  rackId!: number;
 
   @ApiProperty({ description: '设备类型ID' })
   @Type(() => Number)
   @IsInt()
-  deviceTypeId: number;
+  deviceTypeId!: number;
 
   @ApiPropertyOptional({ description: '状态', enum: ['planned', 'active', 'offline', 'maintenance', 'decommissioned'] })
   @IsOptional()
@@ -353,11 +353,11 @@ export class CreateDeviceTypeDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(32)
-  name: string;
+  name!: string;
 
   @ApiProperty({ description: '颜色' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(20)
-  color: string;
+  color!: string;
 }

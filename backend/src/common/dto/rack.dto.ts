@@ -7,12 +7,12 @@ export class CreateRowDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(64)
-  name: string;
+  name!: string;
 
   @ApiProperty({ description: '机房ID' })
   @Type(() => Number)
   @IsNumber()
-  datacenterId: number;
+  datacenterId!: number;
 }
 
 export class UpdateRowDto {
@@ -20,7 +20,7 @@ export class UpdateRowDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(64)
-  name: string;
+  name!: string;
 }
 
 export class CreateRackDto {
@@ -28,12 +28,12 @@ export class CreateRackDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(64)
-  name: string;
+  name!: string;
 
   @ApiProperty({ description: '排ID' })
   @Type(() => Number)
   @IsNumber()
-  rowId: number;
+  rowId!: number;
 
   @ApiPropertyOptional({ description: 'U位数', default: 42 })
   @IsOptional()

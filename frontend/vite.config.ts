@@ -5,7 +5,10 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: { '@': path.resolve(__dirname, 'src') },
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+      'antd/es/card/Meta': path.resolve(__dirname, 'node_modules/antd/es/card/CardMeta'),
+    },
   },
   server: {
     port: 5173,

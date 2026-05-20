@@ -1,8 +1,61 @@
-node_modules
-dist
-*.db
-*.db-journal
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Environment files
 .env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
-backend/tmp-check.js  
-frontend/tsconfig.tsbuildinfo  
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Test coverage
+coverage/
+*.lcov
+
+# Prisma
+backend/prisma/*.db
+backend/prisma/*.db-journal
+
+# Temp files
+backend/tmp-check.js
+tmp/
+temp/
+
+# Docker
+docker-data/
+
+# Packages (downloaded tarballs)
+packages/*.tgz
