@@ -41,6 +41,11 @@
     "three": "^0.184.0",
     "zustand": "^5.0.13"
   },
+  "overrides": {
+    "@react-buddy/palette-antd": {
+      "@ant-design/icons": "^6.2.3"
+    }
+  },
   "devDependencies": {
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
