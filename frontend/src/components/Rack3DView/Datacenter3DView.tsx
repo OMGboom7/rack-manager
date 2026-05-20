@@ -31,9 +31,7 @@ const GridFloor: React.FC = () => {
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
-            count={lines.length / 3}
-            array={new Float32Array(lines)}
-            itemSize={3}
+            args={[new Float32Array(lines), 3]}
           />
         </bufferGeometry>
         <lineBasicMaterial color="#30486a" transparent opacity={0.35} />
