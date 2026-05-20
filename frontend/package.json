@@ -29,7 +29,6 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@react-buddy/ide-toolbox": "^2.5.0",
-    "@react-buddy/palette-antd": "^5.3.1",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "antd": "^6.4.3",
@@ -40,11 +39,6 @@
     "react-router-dom": "^7.15.1",
     "three": "^0.184.0",
     "zustand": "^5.0.13"
-  },
-  "overrides": {
-    "@react-buddy/palette-antd": {
-      "@ant-design/icons": "^6.2.3"
-    }
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
